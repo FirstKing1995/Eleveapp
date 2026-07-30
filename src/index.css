@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --elev-bg: #0b0714;
+  --elev-surface: #191233;
+  --elev-border: #2c2150;
+  --elev-primary: #8b5cf6;
+  --elev-blue: #5b93ff;
+  --elev-pink: #e24bf0;
+  --elev-text: #f3f1fb;
+  --elev-muted: #a79fc6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--elev-text);
+  background-color: var(--elev-bg);
+  background-image: radial-gradient(1200px 600px at 85% -12%, rgba(107, 165, 255, 0.16), transparent 60%),
+    radial-gradient(1000px 560px at -5% 10%, rgba(226, 75, 240, 0.12), transparent 55%),
+    radial-gradient(900px 700px at 50% 120%, rgba(139, 92, 246, 0.12), transparent 60%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(168, 85, 247, 0.35);
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2c2150;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a2c68;
+}
+
+@layer components {
+  .gradient-text {
+    @apply bg-elev-gradient bg-clip-text text-transparent;
+  }
+
+  .card {
+    @apply rounded-2xl2 border border-elev-border bg-elev-surface/70 backdrop-blur-sm shadow-elev-card;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:border-elev-primary/60 hover:shadow-elev-glow hover:-translate-y-0.5;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold tracking-tight
+      transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 select-none;
+  }
+  .btn-lg {
+    @apply h-14 px-7 text-base;
+  }
+  .btn-md {
+    @apply h-11 px-5 text-sm;
+  }
+  .btn-sm {
+    @apply h-9 px-4 text-sm;
+  }
+  .btn-primary {
+    @apply text-white bg-elev-gradient shadow-elev-glow hover:brightness-110 active:brightness-95;
+  }
+  .btn-outline {
+    @apply border border-elev-border text-elev-text hover:bg-white/5 hover:border-elev-primary/60;
+  }
+  .btn-ghost {
+    @apply text-elev-muted hover:text-elev-text hover:bg-white/5;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-elev-border bg-white/5
+      px-3 py-1 text-xs font-medium text-elev-muted;
+  }
+
+  .field-label {
+    @apply block text-[11px] font-semibold uppercase tracking-[0.14em] text-elev-faint mb-1.5;
+  }
+  .input {
+    @apply w-full h-12 rounded-xl border border-elev-border bg-elev-bg2/60 px-4 text-elev-text
+      placeholder:text-elev-faint outline-none transition-all
+      focus:border-elev-primary/70 focus:ring-2 focus:ring-elev-primary/25;
+  }
+  select.input {
+    @apply appearance-none cursor-pointer pr-10;
+  }
+
+  .section-title {
+    @apply font-display font-bold tracking-tight text-elev-text;
+  }
+}
+
+/* ---------- Print (relatorio / recibo) ---------- */
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
