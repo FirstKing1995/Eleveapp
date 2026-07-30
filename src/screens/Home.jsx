@@ -1,9 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Sparkles, ArrowRight, ClipboardCheck, Layers, Rocket, ShieldCheck } from 'lucide-react'
+import { Sparkles, ArrowRight, ClipboardCheck, Layers, Rocket, ShieldCheck, Check } from 'lucide-react'
 import { ElevMark } from '../components/brand/Logo.jsx'
 import { SERVICES } from '../config/services.js'
 import { COMPANY } from '../config/app.js'
-import { formatBRL } from '../lib/format.js'
 
 function Step({ n, icon: Icon, title, text }) {
   return (
@@ -38,20 +37,16 @@ export default function Home() {
             </h1>
             <p className="mt-5 max-w-lg text-lg text-elev-muted">{COMPANY.subtitle}</p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8">
               <button onClick={() => navigate('/diagnostico')} className="btn btn-lg btn-primary">
                 <Sparkles className="h-5 w-5" />
                 Fazer meu diagnóstico
-              </button>
-              <button onClick={() => navigate('/servicos')} className="btn btn-lg btn-outline">
-                Ver serviços
-                <ArrowRight className="h-5 w-5" />
               </button>
             </div>
 
             <div className="mt-6 flex items-center gap-2 text-sm text-elev-muted">
               <ShieldCheck className="h-4 w-4 text-elev-sky" />
-              Quem faz o diagnóstico paga o valor ideal — <b className="text-elev-text">até 50% menos</b>.
+              Quem faz o diagnóstico <b className="text-elev-text">paga menos</b> — até 50% menos.
             </div>
           </div>
 
@@ -62,15 +57,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SOLUCOES */}
+      {/* SOLUCOES (sem precos) */}
       <section className="mx-auto max-w-6xl px-4 pt-12">
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
           <div>
             <h2 className="section-title text-2xl sm:text-3xl">Nossas soluções</h2>
-            <p className="mt-1 text-elev-muted">Quatro trilhas para elevar sua marca, suas vendas e sua operação.</p>
+            <p className="mt-1 text-elev-muted">Marca, marketing e sistemas para elevar o seu negócio.</p>
           </div>
           <Link to="/servicos" className="text-sm font-medium text-elev-sky hover:underline">
-            Ver todos os detalhes →
+            Ver serviços e valores →
           </Link>
         </div>
 
@@ -78,11 +73,7 @@ export default function Home() {
           {SERVICES.map((s) => {
             const Icon = s.icon
             return (
-              <Link
-                key={s.id}
-                to={`/servico/${s.id}`}
-                className="card card-hover flex flex-col p-6"
-              >
+              <Link key={s.id} to={`/servico/${s.id}`} className="card card-hover flex flex-col p-6">
                 <div
                   className="grid h-12 w-12 place-items-center rounded-xl2 bg-elev-gradient-soft"
                   style={{ color: s.accent }}
@@ -90,16 +81,16 @@ export default function Home() {
                   <Icon className="h-6 w-6" />
                 </div>
                 <h3 className="mt-4 font-display text-base font-bold text-elev-text">{s.name}</h3>
-                <p className="mt-1 flex-1 text-sm text-elev-muted">{s.tagline}</p>
-                <div className="mt-4">
-                  <div className="text-[11px] uppercase tracking-wide text-elev-faint">
-                    valor no plano ideal
-                  </div>
-                  <div className="font-display text-xl font-bold text-elev-text">
-                    {formatBRL(s.price)}
-                    {s.period && <span className="text-xs text-elev-muted"> {s.period}</span>}
-                  </div>
-                </div>
+                <p className="mt-1 text-sm text-elev-muted">{s.tagline}</p>
+                <ul className="mt-4 space-y-1.5">
+                  {s.includes.slice(0, 3).map((it) => (
+                    <li key={it} className="flex items-start gap-2 text-xs text-elev-muted">
+                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-elev-sky" />
+                      <span>{it}</span>
+                    </li>
+                  ))}
+                </ul>
+                <span className="mt-4 text-sm font-medium text-elev-sky">Saiba mais →</span>
               </Link>
             )
           })}
@@ -110,24 +101,9 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-4 pt-16">
         <h2 className="section-title text-2xl sm:text-3xl">Como funciona</h2>
         <div className="mt-6 grid gap-5 md:grid-cols-3">
-          <Step
-            n={1}
-            icon={ClipboardCheck}
-            title="Você faz o diagnóstico"
-            text="Um quiz rápido identifica os pontos fracos do seu negócio — marca, marketing ou operação."
-          />
-          <Step
-            n={2}
-            icon={Layers}
-            title="Montamos o combo ideal"
-            text="Com base nas respostas, agrupamos só os serviços que resolvem os seus problemas — pelo valor ideal."
-          />
-          <Step
-            n={3}
-            icon={Rocket}
-            title="Colocamos em prática"
-            text="Você contrata em poucos cliques e a gente executa. Simples, profissional e sob medida."
-          />
+          <Step n={1} icon={ClipboardCheck} title="Você faz o diagnóstico" text="Um quiz rápido identifica os pontos fracos do seu negócio — marca, marketing ou operação." />
+          <Step n={2} icon={Layers} title="Montamos o combo ideal" text="Com base nas respostas e no seu momento, agrupamos só os serviços que resolvem os seus problemas." />
+          <Step n={3} icon={Rocket} title="Colocamos em prática" text="Você contrata em poucos cliques e a gente executa. Simples, profissional e sob medida." />
         </div>
       </section>
 
@@ -140,8 +116,8 @@ export default function Home() {
                 Pronto para elevar o seu negócio?
               </h2>
               <p className="mt-2 max-w-xl text-elev-muted">
-                Leva menos de 3 minutos. No final, você recebe o combo exato para o seu momento — com o
-                melhor preço.
+                Leva menos de 3 minutos. No final, você recebe o diagnóstico completo e a solução exata para o
+                seu momento.
               </p>
             </div>
             <button onClick={() => navigate('/diagnostico')} className="btn btn-lg btn-primary shrink-0">

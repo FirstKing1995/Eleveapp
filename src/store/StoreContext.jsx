@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { shortId } from '../lib/utils.js'
-import { displayPrice, getService } from '../config/services.js'
+import { displayPrice, getService, isAvulso } from '../config/services.js'
+import { computeCart } from '../lib/pricing.js'
 
 const StoreContext = createContext(null)
 
@@ -18,17 +19,16 @@ export function StoreProvider({ children }) {
   const location = useLocation()
 
   const [sellerRef, setSellerRef] = useState(() => localStorage.getItem('elev_ref') || '')
-  const [hasDiagnostic, setHasDiagnostic] = useState(() => loadJSON('elev_hasdiag', false))
-  const [diagnostic, setDiagnostic] = useState(() => loadJSON('elev_diag', null))
-  const [lead, setLead] = useState(() => loadJSON('elev_lead', null))
-  const [cart, setCart] = useState(() => loadJSON('elev_cart', []))
+  const [hasDiagnostic, setHasDiagnostic] = useState(() => loadJSON('elev_hasdiag_v2', false))
+  const [diagnostic, setDiagnostic] = useState(() => loadJSON('elev_diag_v2', null))
+  const [lead, setLead] = useState(() => loadJSON('elev_lead_v2', null))
+  const [cart, setCart] = useState(() => loadJSON('elev_cart_v2', [])) // [{ id, qty }]
 
   const [seller, setSeller] = useState(() => loadJSON('elev_seller', null))
   const [admin, setAdmin] = useState(() => loadJSON('elev_admin', null))
 
   const [toasts, setToasts] = useState([])
 
-  // Captura ?ref=CODIGO do vendedor (funciona com HashRouter)
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     const ref = params.get('ref')
@@ -38,11 +38,10 @@ export function StoreProvider({ children }) {
     }
   }, [location.search, sellerRef])
 
-  // Persistencia
-  useEffect(() => localStorage.setItem('elev_hasdiag', JSON.stringify(hasDiagnostic)), [hasDiagnostic])
-  useEffect(() => localStorage.setItem('elev_diag', JSON.stringify(diagnostic)), [diagnostic])
-  useEffect(() => localStorage.setItem('elev_lead', JSON.stringify(lead)), [lead])
-  useEffect(() => localStorage.setItem('elev_cart', JSON.stringify(cart)), [cart])
+  useEffect(() => localStorage.setItem('elev_hasdiag_v2', JSON.stringify(hasDiagnostic)), [hasDiagnostic])
+  useEffect(() => localStorage.setItem('elev_diag_v2', JSON.stringify(diagnostic)), [diagnostic])
+  useEffect(() => localStorage.setItem('elev_lead_v2', JSON.stringify(lead)), [lead])
+  useEffect(() => localStorage.setItem('elev_cart_v2', JSON.stringify(cart)), [cart])
 
   const toast = useCallback((msg, tone = 'default') => {
     const id = shortId()
@@ -50,7 +49,6 @@ export function StoreProvider({ children }) {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3400)
   }, [])
 
-  // ---------- Diagnostico ----------
   const completeDiagnostic = useCallback((result, leadProfile) => {
     setDiagnostic(result)
     setLead(leadProfile)
@@ -66,21 +64,34 @@ export function StoreProvider({ children }) {
   const priceOf = useCallback((service) => displayPrice(service, hasDiagnostic), [hasDiagnostic])
 
   const addToCart = useCallback(
-    (id) => {
-      setCart((c) => (c.includes(id) ? c : [...c, id]))
-      const s = getService(id)
-      if (s) toast(`${s.name} adicionado ao carrinho.`, 'primary')
+    (id, qty = 1) => {
+      const svc = getService(id)
+      if (!svc) return
+      setCart((c) => {
+        const line = c.find((x) => x.id === id)
+        if (line) {
+          if (isAvulso(id)) return c.map((x) => (x.id === id ? { ...x, qty: x.qty + qty } : x))
+          return c // trilha: não duplica
+        }
+        return [...c, { id, qty: isAvulso(id) ? qty : 1 }]
+      })
+      toast(`${svc.name} adicionado ao carrinho.`, 'primary')
     },
     [toast],
   )
-  const removeFromCart = useCallback((id) => setCart((c) => c.filter((x) => x !== id)), [])
+
+  const setQty = useCallback((id, qty) => {
+    setCart((c) => c.map((x) => (x.id === id ? { ...x, qty: Math.max(1, qty) } : x)))
+  }, [])
+
+  const removeFromCart = useCallback((id) => setCart((c) => c.filter((x) => x.id !== id)), [])
   const clearCart = useCallback(() => setCart([]), [])
-  const setCartItems = useCallback((ids) => setCart(ids), [])
+  const setCartItems = useCallback((ids) => setCart(ids.map((id) => ({ id, qty: 1 }))), [])
 
-  const cartServices = cart.map(getService).filter(Boolean)
-  const cartTotal = cartServices.reduce((sum, s) => sum + priceOf(s), 0)
+  const cartCount = cart.reduce((a, l) => a + (l.qty || 1), 0)
+  const cartPricing = computeCart(cart, hasDiagnostic)
 
-  // ---------- Sessoes ----------
+  // ---------- Sessões ----------
   const loginSellerSession = useCallback((s) => {
     setSeller(s)
     localStorage.setItem('elev_seller', JSON.stringify(s))
@@ -108,10 +119,11 @@ export function StoreProvider({ children }) {
     resetDiagnostic,
     // cart
     cart,
-    cartServices,
-    cartTotal,
+    cartCount,
+    cartPricing,
     priceOf,
     addToCart,
+    setQty,
     removeFromCart,
     clearCart,
     setCartItems,
